@@ -10,31 +10,15 @@ import (
 	"sync"
 )
 
-func isFileOrDirectory(path string) string {
-	if strings.Contains(path, ".") {
-		return "file"
-	} else {
-		return "directory"
-	}
-}
-
-func textFileCheck(path string) bool {
-	if strings.Contains(path, ".txt") {
-		return true
-	} else {
-		return false
-	}
-}
-
-func ReadPathType(path string, keyword string) {
+func FindKeyword(path string, keyword string) {
 	if isFileOrDirectory(path) == "file" {
-		ReadFile(path, keyword)
+		readFile(path, keyword)
 	} else {
-		ReadFiles(path, keyword)
+		readFiles(path, keyword)
 	}
 }
 
-func ReadFilesPath(path string) ([]string, error) {
+func readFilesPath(path string) ([]string, error) {
 	var filesPath []string
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -53,8 +37,24 @@ func ReadFilesPath(path string) ([]string, error) {
 	return filesPath, nil
 }
 
-func ReadFiles(path string, keyword string) {
-	paths, _ := ReadFilesPath(path)
+func isFileOrDirectory(path string) string {
+	if strings.Contains(path, ".") {
+		return "file"
+	} else {
+		return "directory"
+	}
+}
+
+func textFileCheck(path string) bool {
+	if strings.Contains(path, ".txt") {
+		return true
+	} else {
+		return false
+	}
+}
+
+func readFiles(path string, keyword string) {
+	paths, _ := readFilesPath(path)
 
 	var wg sync.WaitGroup
 	results := make(chan []string, len(paths))
@@ -63,7 +63,7 @@ func ReadFiles(path string, keyword string) {
 		wg.Add(1)
 		go func(p string, k string) {
 			defer wg.Done()
-			content := ReadFile(p, k)
+			content := readFile(p, k)
 			results <- content
 		}(path, keyword)
 	}
@@ -80,19 +80,7 @@ func ReadFiles(path string, keyword string) {
 	}
 }
 
-func ReadFilesNo(path string, keyword string) {
-	paths, err := ReadFilesPath(path)
-	if err != nil {
-		fmt.Println("Error reading paths:", err)
-		return
-	}
-
-	for _, path := range paths {
-		ReadFile(path, keyword)
-	}
-}
-
-func ReadFile(path string, keyword string) []string {
+func readFile(path string, keyword string) []string {
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Printf("%s 파일을 읽는데 실패했습니다.\n", path)

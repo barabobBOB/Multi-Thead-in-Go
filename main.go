@@ -6,9 +6,13 @@ import (
 )
 
 func main() {
-	keyword, path := InputCommend()
+	commend := InputCommend()
+
 	start := time.Now()
-	ReadPathType(path, keyword)
+
+	FindKeyword(commend.path, commend.keyword)
+
 	end := time.Now()
+
 	fmt.Println("실행 시간:", end.Sub(start))
 }
