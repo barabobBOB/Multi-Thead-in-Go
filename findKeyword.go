@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -55,6 +56,8 @@ func textFileCheck(path string) bool {
 
 func readFiles(path string, keyword string) {
 	paths, _ := readFilesPath(path)
+
+	runtime.GOMAXPROCS(runtime.NumCPU()) // 사용 가능한 모든 CPU 코어 사용
 
 	var wg sync.WaitGroup
 	results := make(chan []string, len(paths))
