@@ -16,5 +16,9 @@ func InputCommend() (string, string) {
 		panic("명령어가 올바르지 않습니다.")
 	}
 
+	if len(commandList) >= 4 {
+		panic("명령어가 올바르지 않습니다.")
+	}
+
 	return commandList[1], commandList[2]
 }
