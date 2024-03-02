@@ -19,4 +19,5 @@
 6. 파일들은 모두 UTF8 인코딩으로 작성된 Text파일이라고 가정한다.
 
 출처: https://tech.devsisters.com/posts/server-position-coding-test/
+
 구현 과정: https://velog.io/@chltpdus48/Multi-Thead-in-Go
