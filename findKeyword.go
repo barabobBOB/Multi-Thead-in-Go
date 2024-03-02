@@ -5,99 +5,79 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
-	"strconv"
 	"strings"
-	"sync"
 )
 
+// FindKeyword 함수는 주어진 경로에서 키워드를 찾습니다.
+// 파일 또는 디렉토리 여부에 따라 적절한 함수를 호출합니다.
 func FindKeyword(path string, keyword string) {
 	if isFileOrDirectory(path) == "file" {
-		readFile(path, keyword)
+		// 단일 파일일 경우
+		results := readFile(path, keyword)
+		for _, result := range results {
+			fmt.Println(result)
+		}
 	} else {
+		// 디렉토리일 경우
 		readFiles(path, keyword)
 	}
 }
 
+// readFilesPath 함수는 주어진 디렉토리 내 모든 텍스트 파일의 경로를 반환합니다.
 func readFilesPath(path string) ([]string, error) {
 	var filesPath []string
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			fmt.Printf(err.Error())
+			return err
 		}
-		if !info.IsDir() {
-			if textFileCheck(path) {
-				filesPath = append(filesPath, path)
-			}
+		if !info.IsDir() && textFileCheck(path) {
+			filesPath = append(filesPath, path)
 		}
 		return nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return filesPath, nil
+	return filesPath, err
 }
 
+// isFileOrDirectory 함수는 주어진 경로가 파일인지 디렉토리인지 확인합니다.
 func isFileOrDirectory(path string) string {
 	if strings.Contains(path, ".") {
 		return "file"
-	} else {
-		return "directory"
 	}
+	return "directory"
 }
 
+// textFileCheck 함수는 주어진 경로가 텍스트 파일인지 확인합니다.
 func textFileCheck(path string) bool {
-	if strings.Contains(path, ".txt") {
-		return true
-	} else {
-		return false
-	}
+	return strings.HasSuffix(path, ".txt")
 }
 
+// readFiles 함수는 디렉토리 내 모든 파일에서 키워드를 비동기적으로 검색합니다.
 func readFiles(path string, keyword string) {
 	paths, _ := readFilesPath(path)
 
-	runtime.GOMAXPROCS(runtime.NumCPU()) // 사용 가능한 모든 CPU 코어 사용
-
-	var wg sync.WaitGroup
-	results := make(chan []string, len(paths))
-
 	for _, path := range paths {
-		wg.Add(1)
-		go func(p string, k string) {
-			defer wg.Done()
-			content := readFile(p, k)
-			results <- content
-		}(path, keyword)
-	}
-
-	go func() {
-		wg.Wait()
-		close(results)
-	}()
-
-	for content := range results {
+		content := readFile(path, keyword)
 		for _, str := range content {
 			fmt.Println(str)
 		}
 	}
 }
 
+// readFile 함수는 주어진 파일에서 키워드를 검색하고 결과를 반환합니다.
 func readFile(path string, keyword string) []string {
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Printf("%s 파일을 읽는데 실패했습니다.\n", path)
+		fmt.Printf("Failed to open file %s\n", path)
+		return nil
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	lineNumber := 1
-
-	keywordLog := make([]string, 0)
+	var keywordLog []string
 	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, keyword) {
-			keywordLog = append(keywordLog, "File:"+path+"/ Line: "+strconv.Itoa(lineNumber))
+		if strings.Contains(scanner.Text(), keyword) {
+			keywordLog = append(keywordLog, fmt.Sprintf("File: %s / Line: %d", path, lineNumber))
 		}
 		lineNumber++
 	}
